@@ -1,0 +1,25 @@
+{
+  "app_id": "APPLICATION_ID",
+  "type": "USER",
+  "application": "APPLICATION_NAME",
+  "data_access_expires_at": "ACCESS_TOKEN_TIMESTAMP_EXPIRED",
+  "expires_at": "REFRESH_TOKEN_TIMESTAMP_EXPIRED",
+  "is_valid": true,
+  "issued_at": "REFRESH_TOKEN_TIMESTAMP_ISSUED",
+  "scopes": [],
+  "granular_scopes": [
+    {
+      "scope": "pages_show_list",
+      "target_ids": []
+    },
+    {
+      "scope": "ads_read"
+    },
+    {
+      "scope": "pages_read_engagement",
+      "target_ids": []
+    }
+  ],
+  "user_id": "YOUR_USER_ID",
+  "timestamp": "TIMESTAMP_AT_PROCESS"
+}

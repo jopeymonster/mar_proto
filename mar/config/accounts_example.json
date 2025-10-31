@@ -1,0 +1,11 @@
+{
+    "agency_one":{
+    "Nike":"AD_ACCOUNT_NUMBER",
+    "Google":"AD_ACCOUNT_NUMBER",
+    "NVidia":"AD_ACCOUNT_NUMBER"
+},
+    "agency_two":{
+    "Nestle":"AD_ACCOUNT_NUMBER",
+    "BMO":"AD_ACCOUNT_NUMBER"
+}
+}

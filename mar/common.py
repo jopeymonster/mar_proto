@@ -20,9 +20,17 @@ from typing import Any, Dict, Optional
 from tabulate import tabulate
 
 # -----------------------------
-# Builtins monkey-patch for input "exit"
+# Package directory anchoring constants
 # -----------------------------
 
+PACKAGE_DIR: Path = Path(__file__).resolve().parent
+DEFAULT_CONFIG_DIR: Path = PACKAGE_DIR / "config"
+DEFAULT_CACHE_PATH: Path = DEFAULT_CONFIG_DIR / "token_validation.json"
+
+
+# -----------------------------
+# Builtins monkey-patch for input "exit"
+# -----------------------------
 
 def _custom_input(prompt: str = "") -> str:
     """Wrap built-in input to allow 'exit' to quit gracefully."""

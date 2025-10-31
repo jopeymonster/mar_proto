@@ -1,5 +1,9 @@
 # gitignore for python projects
 
+# testing files
+accounts.json
+token_validation.json
+
 # business/corporate specific files
 *_sportsw*
 

@@ -47,14 +47,20 @@ def main():
     args = parse_args()
     config_path = resolve_config_path(args.config)
     creds = auth.load_auth_credentials(config_path)
-
     client = auth.get_client(cast(AuthDict,creds))
 
     try:
-        me = client.get("me", {"fields": "id,name"})
+        me = client.get_auth("me", {"fields": "id,name"})
         print("\nAuthenticated successfully!")
         print(f"User ID: {me['id']}")
         print(f"Name: {me['name']}")
+        print("\nFetching available ad accounts...")
+        ad_accounts = client.get_ad_accounts()
+        print(f"Found {len(ad_accounts)} ad accounts:\n")
+
+        for acct in ad_accounts:
+            print(f" - {acct.get('name', 'N/A')} ({acct.get('id')}) [status: {acct.get('account_status')}]")
+
     except Exception as e:
         print(f"\nAuthentication failed:\n{e}")
 
