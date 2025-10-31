@@ -6,7 +6,7 @@ import os
 import sys
 from typing import cast
 import auth
-from auth import AuthDict
+import ads
 
 
 def parse_args() -> argparse.Namespace:
@@ -19,6 +19,21 @@ def parse_args() -> argparse.Namespace:
         "--config",
         metavar="PATH",
         help="Path to JSON config file containing auth credentials.",
+    )
+    parser.add_argument(
+        "--all-accounts",
+        action="store_true",
+        help="Retrieve all active ad accounts."
+    )
+    parser.add_argument(
+        "--account-group",
+        metavar="NAME",
+        help="Get all accounts within the accounts.json indicated dictionary group."
+    )
+    parser.add_argument(
+        "--accounts-file",
+        metavar="PATH",
+        help="Optional path to accounts.json. Default is package '/config' directory."
     )
     return parser.parse_args()
 
@@ -47,23 +62,35 @@ def main():
     args = parse_args()
     config_path = resolve_config_path(args.config)
     creds = auth.load_auth_credentials(config_path)
-    client = auth.get_client(cast(AuthDict,creds))
-
+    client = auth.get_client(cast(auth.AuthDict,creds))
     try:
         me = client.get_auth("me", {"fields": "id,name"})
-        print("\nAuthenticated successfully!")
-        print(f"User ID: {me['id']}")
-        print(f"Name: {me['name']}")
-        print("\nFetching available ad accounts...")
-        ad_accounts = client.get_ad_accounts()
-        print(f"Found {len(ad_accounts)} ad accounts:\n")
+    except Exception as e:
+        print(f"\nAuthentication failed:\n{e}")
+    print("\nAuthenticated successfully!")
+    print(f"User ID: {me['id']}")
+    print(f"Name: {me['name']}")
 
+    if args.all_accounts:
+        print("\nFetching all available ad accounts...")
+        ad_accounts = client.get_ad_accounts()
+        active_accts = [aa for aa in ad_accounts if aa.get("account_status") == 1]
+        selected_accounts = [f"act_{sa['account_id']}" for sa in active_accts if sa.get("account_id")]
+        print(f"Found {len(active_accts)} ad accounts:\n")
         for acct in ad_accounts:
             print(f" - {acct.get('name', 'N/A')} ({acct.get('id')}) [status: {acct.get('account_status')}]")
 
-    except Exception as e:
-        print(f"\nAuthentication failed:\n{e}")
-
+    elif args.account_group:
+        group = ads.load_account_group(args.account_group, args.accounts_file)
+        selected_accounts = ads.normalize_group_ids(group)
+        print(f"\nDiscovered {len(selected_accounts)} accounts from group '{args.account_group}':")
+        for acct_name, raw_id in group.items():
+            prefixed = raw_id if raw_id.startswith("act_") else f"act_{raw_id}"
+            print(f" - {acct_name}: {prefixed}")
+    else:
+        sys.exit("Error - specific either:\n "
+                 " '--all-accounts' or '--account_group <name>'"
+                 "Use <name> as it is found within the accounts.json.")
 
 if __name__ == "__main__":
     main()

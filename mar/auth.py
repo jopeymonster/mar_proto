@@ -86,7 +86,6 @@ def validate_token(app_id: str, app_secret: str, access_token: str, cache_path: 
     data["timestamp"] = time.time()
     cache_path.parent.mkdir(parents=True, exist_ok=True)
     cache_path.write_text(json.dumps(data, indent=2))
-    os.makedirs(os.path.dirname(cache_path), exist_ok=True)
 
     # if invalid, abort early
     if not data.get("is_valid"):
@@ -112,7 +111,7 @@ def get_client(creds: AuthDict) -> MetaAPIClient:
 
     validation_data = validate_token(app_id, app_secret, access_token, cache_path)
     print(f"\nValidated token for user_id: {validation_data.get('user_id')}" 
-          f"({validation_data.get('application')})")
+          f" - ({validation_data.get('application')})")
 
     if not proof:
         proof = generate_appsecret_proof(app_secret, access_token)

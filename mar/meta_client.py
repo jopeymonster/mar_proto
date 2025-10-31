@@ -38,12 +38,8 @@ class MetaAPIClient:
             "access_token": self.access_token,
             "appsecret_proof": self.appsecret_proof,
             "limit": limit,
+            "fields": ",".join(fields) if fields else "id,account_id,name,account_status",
         }
-
-        if fields:
-            params["fields"] = ",".join(fields)
-        else:
-            params["fields"] = "id,account_id,name,account_status"
 
         results: list[dict[str, Any]] = []
         next_url: str | None = f"{self.BASE_URL}/{endpoint}"
