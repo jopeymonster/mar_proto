@@ -100,7 +100,7 @@ def sanitize_filename(name: str) -> str:
 def save_csv(table_data, headers) -> None:
     """Persist table data to a CSV in the user's home directory."""
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    default_file_name = f"gads_report_{timestamp}.csv"
+    default_file_name = f"meta_report_{timestamp}.csv"
     print(f"Default file name: {default_file_name}")
 
     file_name_input = input("Enter a file name (or leave blank for default): ").strip()
