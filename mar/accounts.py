@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# ads.py
+# accounts.py
 
 import json
 import sys
@@ -7,10 +7,10 @@ from pathlib import Path
 from typing import Dict, List
 
 import common
-
+from meta_client import MetaAPIClient
 
 def default_accounts_path() -> Path:
-    return common.DEFAULT_CONFIG_DIR / "accounts.json"
+    return common.DEFAULT_CONFIG_DIR / "accounts_info.json"
 
 
 def load_accounts_file(path: str | None) -> Dict[str, Dict[str, str]]:

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # meta_client.py
 
+import json
 from typing import Optional, Any
 import requests
 
@@ -60,3 +61,42 @@ class MetaAPIClient:
             params = {}
 
         return results
+    
+    def get_insights(
+        self,
+        account_id: str,
+        fields: list[str] | None = None,
+        date_preset: str | None = None,
+        time_range: dict[str, str] | None = None,
+        level: str = "campaign",
+        limit: int = 100,
+    ) -> dict:
+        """Fetch insights for a given ad account."""
+        endpoint = f"{account_id}/insights"
+
+        params: dict[str, Any] = {
+            "access_token": self.access_token,
+            "appsecret_proof": self.appsecret_proof,
+            "level": level,
+            "limit": limit,
+        }
+
+        # date filters
+        if date_preset:
+            params["date_preset"] = date_preset  # 'last_7d', 'this_month'
+        elif time_range:
+            params["time_range"] = json.dumps(time_range)     # {'since': '2025-10-01', 'until': '2025-10-30'}
+        else:
+            params["date_preset"] = "last_7d"
+
+        # metrics fields (default)
+        if fields:
+            params["fields"] = ",".join(fields)
+        else:
+            params["fields"] = "account_id,campaign_id,campaign_name,impressions,clicks,spend"
+
+        url = f"{self.BASE_URL}/{endpoint}"
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+
+        return response.json()

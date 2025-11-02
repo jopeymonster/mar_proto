@@ -4,9 +4,10 @@
 import argparse
 import os
 import sys
+from datetime import date, timedelta
 from typing import cast
 import auth
-import ads
+import accounts
 
 
 def parse_args() -> argparse.Namespace:
@@ -28,12 +29,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--account-group",
         metavar="NAME",
-        help="Get all accounts within the accounts.json indicated dictionary group."
+        help="Get all accounts within the accounts_info.json indicated dictionary group."
     )
     parser.add_argument(
         "--accounts-file",
         metavar="PATH",
-        help="Optional path to accounts.json. Default is package '/config' directory."
+        help="Optional path to accounts_info.json. Default is package '/config' directory."
     )
     return parser.parse_args()
 
@@ -81,16 +82,51 @@ def main():
             print(f" - {acct.get('name', 'N/A')} ({acct.get('id')}) [status: {acct.get('account_status')}]")
 
     elif args.account_group:
-        group = ads.load_account_group(args.account_group, args.accounts_file)
-        selected_accounts = ads.normalize_group_ids(group)
+        group = accounts.load_account_group(args.account_group, args.accounts_file)
+        selected_accounts = accounts.normalize_group_ids(group)
         print(f"\nDiscovered {len(selected_accounts)} accounts from group '{args.account_group}':")
         for acct_name, raw_id in group.items():
             prefixed = raw_id if raw_id.startswith("act_") else f"act_{raw_id}"
             print(f" - {acct_name}: {prefixed}")
     else:
-        sys.exit("Error - specific either:\n "
-                 " '--all-accounts' or '--account_group <name>'"
-                 "Use <name> as it is found within the accounts.json.")
+        sys.exit(
+            "Error - specify either:\n"
+            "  '--all-accounts' or '--account-group <name>'\n"
+            "Use <name> as it is found within the accounts_info.json."
+            )
+            
+    # get_insights test block
+    test_input = input("Run insights report? (Y or N): ").lower().strip()
+    if test_input == "y":
+        if selected_accounts:
+            print("\nTesting insights retrieval for first selected account...")
+            first_account = selected_accounts[0]
+            print(f"Requesting insights for: {first_account}")
+
+            # Compute last 7 days
+            today = date.today()
+            seven_days_ago = today - timedelta(days=7)
+            time_range = {"since": seven_days_ago.strftime("%Y-%m-%d"), "until": today.strftime("%Y-%m-%d")}
+
+            try:
+                insights = client.get_insights(
+                    account_id=first_account,
+                    time_range=time_range,
+                    level="campaign",
+                    fields=["campaign_id", "campaign_name", "impressions", "clicks", "spend"],
+                )
+
+                data = insights.get("data", [])
+                print(f"Returned {len(data)} rows.")
+                if data:
+                    print(f"Sample:\n{data[0]}")
+            except Exception as e:
+                print(f"\nError fetching insights: {e}")
+        else:
+            print("Insight test skipped.")
+            return
+    else:
+        sys.exit("User exited or error occured with insights report.")
 
 if __name__ == "__main__":
     main()
