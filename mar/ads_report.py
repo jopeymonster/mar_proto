@@ -49,7 +49,7 @@ def run_insights_report(client: MetaAPIClient, selected_accounts: List[str]) -> 
     _, start_date, end_date, _ = common.get_timerange()
     time_range = {"since": str(start_date), "until": str(end_date)}
 
-    print(f"\nTime Range: {time_range['since']} → {time_range['until']}\n")
+    print(f"\nTime Range: {time_range['since']} through {time_range['until']}\n")
 
     # Choose metrics
     fields = [
