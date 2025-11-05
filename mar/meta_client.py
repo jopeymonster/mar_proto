@@ -71,10 +71,10 @@ class MetaAPIClient:
         level: str = "campaign",
         limit: int = 100,
     ) -> dict:
-        """Fetch insights for a given ad account."""
+        """Retrieve all insights for a given ad account."""
         endpoint = f"{account_id}/insights"
 
-        params: dict[str, Any] = {
+        base_params: dict[str, Any] = {
             "access_token": self.access_token,
             "appsecret_proof": self.appsecret_proof,
             "level": level,
@@ -83,20 +83,39 @@ class MetaAPIClient:
 
         # date filters
         if date_preset:
-            params["date_preset"] = date_preset  # 'last_7d', 'this_month'
+            base_params["date_preset"] = date_preset  # 'last_7d', 'this_month'
         elif time_range:
-            params["time_range"] = json.dumps(time_range)     # {'since': '2025-10-01', 'until': '2025-10-30'}
+            # normalize date formats to YYYY-MM-DD (Meta requires ISO format)
+            fixed_range = {
+                "since": str(time_range.get("since")).replace("-", ""),
+                "until": str(time_range.get("until")).replace("-", "")
+            }
+            # reformat if YYYYMMDD
+            for key, val in fixed_range.items():
+                if len(val) == 8 and "-" not in val:
+                    fixed_range[key] = f"{val[0:4]}-{val[4:6]}-{val[6:8]}"
+            base_params["time_range"] = json.dumps(fixed_range)
         else:
-            params["date_preset"] = "last_7d"
+            base_params["date_preset"] = "last_7d"
 
         # metrics fields (default)
         if fields:
-            params["fields"] = ",".join(fields)
+            base_params["fields"] = ",".join(fields)
         else:
-            params["fields"] = "account_id,campaign_id,campaign_name,impressions,clicks,spend"
+            base_params["fields"] = "account_id,campaign_id,campaign_name,impressions,clicks,spend"
 
         url = f"{self.BASE_URL}/{endpoint}"
-        response = requests.get(url, params=params)
-        response.raise_for_status()
+        insights_data: list[dict[str, Any]] = []
+        while url:
+            response = requests.get(url, params=base_params)
+            response.raise_for_status()
+            response_data = response.json()
 
-        return response.json()
+            insights_data.extend(response_data.get("data", []))
+            paging = response_data.get("paging", {})
+            url = paging.get("next") # MetaAPI includes next-page URL
+
+            # clear auth params, only needed on first request
+            base_params = {}
+
+        return {"data": insights_data}

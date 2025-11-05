@@ -8,6 +8,7 @@ from datetime import date, timedelta
 from typing import cast
 import auth
 import accounts
+import ads_report
 
 
 def parse_args() -> argparse.Namespace:
@@ -96,37 +97,11 @@ def main():
             )
             
     # get_insights test block
-    test_input = input("Run insights report? (Y or N): ").lower().strip()
-    if test_input == "y":
-        if selected_accounts:
-            print("\nTesting insights retrieval for first selected account...")
-            first_account = selected_accounts[0]
-            print(f"Requesting insights for: {first_account}")
-
-            # Compute last 7 days
-            today = date.today()
-            seven_days_ago = today - timedelta(days=7)
-            time_range = {"since": seven_days_ago.strftime("%Y-%m-%d"), "until": today.strftime("%Y-%m-%d")}
-
-            try:
-                insights = client.get_insights(
-                    account_id=first_account,
-                    time_range=time_range,
-                    level="campaign",
-                    fields=["campaign_id", "campaign_name", "impressions", "clicks", "spend"],
-                )
-
-                data = insights.get("data", [])
-                print(f"Returned {len(data)} rows.")
-                if data:
-                    print(f"Sample:\n{data[0]}")
-            except Exception as e:
-                print(f"\nError fetching insights: {e}")
-        else:
-            print("Insight test skipped.")
-            return
+    run_report = input("Run insights report for selected accounts? (Y/N): ").lower().strip()
+    if run_report in ("y", "yes"):
+        ads_report.run_insights_report(client, selected_accounts)
     else:
-        sys.exit("User exited or error occured with insights report.")
+        print("Report skipped.")
 
 if __name__ == "__main__":
     main()
