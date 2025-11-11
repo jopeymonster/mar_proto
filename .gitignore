@@ -70,7 +70,6 @@ venv.bak/
 .venv/
 .env
 .venv
-gads/   # added: your named venv
 
 # PyInstaller
 *.manifest
