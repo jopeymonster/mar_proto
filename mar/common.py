@@ -13,19 +13,22 @@ import pydoc
 import re
 import sys
 from datetime import date, datetime, timedelta
-from decimal import ROUND_HALF_UP, Decimal
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Optional
 
 from tabulate import tabulate
 
 # -----------------------------
-# Package directory anchoring constants
+# Package constants
 # -----------------------------
 
+# directory
 PACKAGE_DIR: Path = Path(__file__).resolve().parent
 DEFAULT_CONFIG_DIR: Path = PACKAGE_DIR / "config"
 DEFAULT_CACHE_PATH: Path = DEFAULT_CONFIG_DIR / "token_validation.json"
+# meta
+KNOWN_MACS = {"fbpaid", "fbshop", "igshop", "igpaid"} # fallback
+MAC_COLON_PATTERN = re.compile(r":\s*([A-Za-z0-9]+)", re.IGNORECASE)
 
 
 # -----------------------------
@@ -53,25 +56,36 @@ else:
 # -----------------------------
 # Formula helpers
 # -----------------------------
+def extract_mac(campaign_name: str) -> Optional[str]:
+    if not campaign_name:
+        return ""
+    elif ":" not in campaign_name:
+        lower_name = campaign_name.lower()
+        for mac in KNOWN_MACS:
+            if mac in lower_name:
+                return mac
+    _, tail = campaign_name.rsplit(":", 1)
+    return tail.strip()
 
-MICROS_PER_UNIT = Decimal("1000000")
+"""
+def extract_mac(campaign_name: str) -> Optional[str]:
+    # Extract a marketing attribution code (MAC) from campaign_name.
+    if not campaign_name:
+        return None
 
+    # standard discovery
+    m = MAC_COLON_PATTERN.search(campaign_name, -1)
+    if m:
+        return m.group(1).lower()
 
-def micros_to_decimal(
-    micros: Optional[int | str],
-    quantize: Optional[Decimal] = None,
-    rounding=ROUND_HALF_UP,
-) -> Decimal:
-    """Convert micro-units to Decimal without precision loss."""
-    if micros in (None, ""):
-        value = Decimal("0")
-    else:
-        value = Decimal(str(micros)) / MICROS_PER_UNIT
-    if quantize is not None:
-        return value.quantize(quantize, rounding=rounding)
-    return value
+    # fallback for static
+    lower_name = campaign_name.lower()
+    for mac in KNOWN_MACS:
+        if mac in lower_name:
+            return mac
 
-
+    return None
+"""
 # -----------------------------
 # Console errors
 # -----------------------------
@@ -81,7 +95,7 @@ def user_error(err_type: int) -> None:
     """Exit with a consistent user-facing error message."""
     if err_type == 1:
         sys.exit("Problem with MAIN loop.")
-    if err_type == 2:
+    elif err_type == 2:
         sys.exit("Invalid input.")
     elif err_type in [3, 4]:
         sys.exit("Problem with output data.")
@@ -154,7 +168,7 @@ def data_handling_options(
     report_view = preselected_output
     if not report_view:
         print(
-            "How would you like to view the report?\n1. CSV\n2. Display table on screen\n"
+            "\nHow would you like to view the report?\n1. CSV\n2. Display table on screen\n"
         )
         report_view = input("Choose 1 or 2 ('exit' to exit): ").strip().lower()
 

@@ -4,8 +4,8 @@
 import argparse
 import os
 import sys
-from datetime import date, timedelta
 from typing import cast
+import tabulate
 import auth
 import accounts
 import ads_report
@@ -86,9 +86,12 @@ def main():
         group = accounts.load_account_group(args.account_group, args.accounts_file)
         selected_accounts = accounts.normalize_group_ids(group)
         print(f"\nDiscovered {len(selected_accounts)} accounts from group '{args.account_group}':")
-        for acct_name, raw_id in group.items():
-            prefixed = raw_id if raw_id.startswith("act_") else f"act_{raw_id}"
-            print(f" - {acct_name}: {prefixed}")
+        account_table = []
+        for idx, (acct_name, raw_id) in enumerate(group.items(), start=1):
+            actid = raw_id if raw_id.startswith("act_") else f"act_{raw_id}"
+            account_table.append([idx, acct_name, actid])
+        print(tabulate.tabulate(account_table, headers=["", "account name", "account id"], tablefmt="simple_grid"))
+
     else:
         sys.exit(
             "Error - specify either:\n"
@@ -96,10 +99,15 @@ def main():
             "Use <name> as it is found within the accounts_info.json."
             )
             
-    # get_insights test block
+    # get_insights
     run_report = input("Run insights report for selected accounts? (Y/N): ").lower().strip()
     if run_report in ("y", "yes"):
-        ads_report.run_insights_report(client, selected_accounts)
+        ads_report.run_insights_report(
+            client, 
+            selected_accounts,
+            args.account_group,
+            args.accounts_file
+        )
     else:
         print("Report skipped.")
 

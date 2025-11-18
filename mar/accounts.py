@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Dict, List
 
 import common
-from meta_client import MetaAPIClient
 
 def default_accounts_path() -> Path:
     return common.DEFAULT_CONFIG_DIR / "accounts_info.json"
@@ -45,3 +44,17 @@ def normalize_act_id(account_id: str) -> str:
 def normalize_group_ids(group: Dict[str, str]) -> List[str]:
     """Returns a list of normalized act_<id> strings from group map"""
     return [normalize_act_id(v) for v in group.values()]
+
+
+def get_account_name_from_actid(act_id: str, group: Dict[str, str]) -> str:
+    """
+    Given act_######## and a group dict {name: id}, return account name.
+    If not found, just return act_id.
+    """
+    normalized = act_id.replace("act_", "")
+
+    for acct_name, raw_id in group.items():
+        if raw_id == normalized:
+            return acct_name
+
+    return act_id  # fallback
