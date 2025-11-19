@@ -15,6 +15,7 @@ def get_account_insights(
         time_range: Dict[str, str],
         level: str = "campaign",
         fields: List[str] | None = None,
+        time_increment: str = "1",
 ) -> List[Dict[str, str]]:
     """Retrieve data for multiple ad accounts and merge results"""
     all_rows: List[Dict[str, str]] = []
@@ -29,6 +30,7 @@ def get_account_insights(
                 time_range=time_range,
                 level=level,
                 fields=fields,
+                time_increment=time_increment
             )
             data = response.get("data", [])
 
@@ -63,10 +65,19 @@ def run_insights_report(
     groups_map = accounts.load_account_group(group_name, accounts_file)
 
     # date range
-    _, start_date, end_date, _ = common.get_timerange()
+    _, start_date, end_date, time_seg = common.get_timerange()
     time_range = {"since": str(start_date), "until": str(end_date)}
 
     print(f"\nTime Range: {time_range['since']} through {time_range['until']}\n")
+    # time_seg meta transform
+    seg_map = {
+        "date": "1",
+        "week": "7",
+        "month": "monthly",
+        "quarter": "quarterly",
+        "year": "yearly"
+    }
+    time_increment = seg_map.get(time_seg, "1")  # default daily
 
     # metrics
     fields = [
@@ -85,7 +96,9 @@ def run_insights_report(
         groups_map,
         time_range,
         level="campaign",
-        fields=fields)
+        fields=fields,
+        time_increment=time_increment,
+        )
 
     if not rows:
         print("No results found.")

@@ -70,6 +70,7 @@ class MetaAPIClient:
         time_range: dict[str, str] | None = None,
         level: str = "campaign",
         limit: int = 100,
+        time_increment: str | None = None,
     ) -> dict:
         """Retrieve all insights for a given ad account."""
         endpoint = f"{account_id}/insights"
@@ -104,6 +105,9 @@ class MetaAPIClient:
         else:
             base_params["fields"] = "account_id,campaign_id,campaign_name,impressions,clicks,spend"
 
+        if time_increment:
+            base_params["time_increment"] = time_increment
+
         url = f"{self.BASE_URL}/{endpoint}"
         insights_data: list[dict[str, Any]] = []
         while url:
@@ -114,8 +118,5 @@ class MetaAPIClient:
             insights_data.extend(response_data.get("data", []))
             paging = response_data.get("paging", {})
             url = paging.get("next") # MetaAPI includes next-page URL
-
-            # clear auth params, only needed on first request
-            base_params = {}
 
         return {"data": insights_data}
